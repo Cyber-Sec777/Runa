@@ -1,0 +1,96 @@
+#!/bin/env bash
+
+U=$1
+url=$2
+
+# TPUT CONFIG :)
+
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
+BOLD=$(tput bold)
+REDBG=$(tput setab 1)
+RESET=$(tput sgr0)
+
+#######################
+
+install_ipinfo()
+{
+       if [[ -e "$PREFIX/bin/ipinfo" ]]; then
+              install_speed
+       else
+              clear
+              echo
+              echo
+              echo -e "${BOLD}${MAGENTA}Instalando IpInfo e o Speedtest...Aguarde :-:${RESET}\n\n"
+              cd $HOME
+              pkg install clang -y &> /dev/null
+              apt-get install golang &> /dev/null
+              pkg install coreutils -y &> /dev/null
+              go get github.com/ipinfo/cli/ipinfo &> /dev/null
+              cd go/bin
+              mv ipinfo $PREFIX/bin
+              install_speed
+       fi
+}
+
+install_speed()
+{
+       if [[ -e "$PREFIX/bin/speedtest-cli" ]]; then
+              option
+       else
+              cd $HOME
+              pkg install wget -y &> /dev/null
+              wget https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py -O speedtest-cli &> /dev/null
+              chmod +x speedtest-cli
+              mv speedtest-cli $PREFIX/bin
+              clear
+              echo
+              echo -e "${BOLD}${MAGENTA}Execute o script novamente.${RESET}\n\n"
+       fi
+}
+
+option()
+{
+       if [ "$U" == "-u" ]; then
+
+              ip=$(ping -c1 $url 2>&1 | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
+              ipinfo $ip
+
+       elif [ "$U" == "-s" ]; then
+              echo
+              wget $url &> /dev/null
+
+              cat index.html | grep -o "https://[a-zA-Z.]*\.com\/*" | sort -u
+              cat index.html | grep -o "http://[a-zA-Z.]*\.com/" | sort -u
+              rm -rf index.html
+
+       elif [ "$U" == "-mbs" ]; then
+              speedtest-cli --simple --secure > .mbs
+
+              ping=$(grep "Ping" .mbs | awk {'print $2,$3'})
+              download=$(grep "Download:" .mbs | awk {'print $2,$3'})
+              upload=$(grep "Upload:" .mbs | awk {'print $2,$3'})
+              echo 
+              echo -e "${GREEN}${BOLD}Ping: ${RESET}$ping\n"
+
+              echo -e "${GREEN}${BOLD}Download: ${RESET}$download\n"
+
+              echo -e "${GREEN}${BOLD}Upload: ${RESET}$upload\n"
+              if [ -e .mbs ]; then
+                     rm -rf .mbs
+              fi
+
+       else
+              echo -e "Usage: "
+              echo -e "   -u www.google.com ${BOLD}${RED}Informações sobre o Ip do Site.${RESET}\n"
+              echo -e "   -s www.globo.com ${BOLD}${RED}Lista Todos os subdomains.${RESET}\n"
+              echo -e "   -mbs ${BOLD}${RED}Verificar a Velocidade da Internet :-:${RESET}"
+       fi
+}
+install_ipinfo
