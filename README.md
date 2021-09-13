@@ -27,7 +27,7 @@ pkg install git -y && pkg install curl -y
 
 pkg install ncurses-utils -y
 
-git clone https://Cyber-Sec77/Runa
+git clone https://github.com/Cyber-Sec77/Runa
 
 cd Runa
 
